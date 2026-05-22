@@ -11,7 +11,7 @@ This repository contains data and visualizations from a field study on the **CBC
 
 Two surveys were administered. Survey 1 measured teacher perceptions before using the system. Survey 2 measured outcomes after teachers had generated and taught at least one lesson plan.
 
-🌐 **Live Project:** [cbclessonplansug.com](https://cbclessonplansug.com)
+🌐 **Live Project:** [cbclessonplansug.com](https://www.cbclessonplansug.com)
 
 ---
 
