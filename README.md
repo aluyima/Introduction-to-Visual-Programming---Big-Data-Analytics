@@ -41,29 +41,6 @@ Two surveys were administered. Survey 1 measured teacher perceptions before usin
 
 ---
 
-## Key Findings
-
-### Survey 1 — TAM Construct Means (N = 103)
-
-| Construct | Mean | Items |
-|-----------|------|-------|
-| Job Relevance | 4.52 | 2 |
-| Behavioral Intention | 4.45 | 2 |
-| Perceived Usefulness | 4.44 | 4 |
-| Perceived Ease of Use | 4.33 | 4 |
-| System Quality | 4.07 | 2 |
-
-### Survey 2 — Post-Implementation Construct Means (N = 69)
-
-| Construct | Mean | Items |
-|-----------|------|-------|
-| Teaching Self-Efficacy | 4.10 | 2 |
-| System Quality | 4.06 | 4 |
-| PCK Gains | 4.04 | 10 |
-| Life Satisfaction *(control)* | 3.96 | 4 |
-
----
-
 ## Repository Structure
 
 ```
@@ -123,7 +100,6 @@ No server or installation required.
 
 This field study supports a PhD research project at Makerere University examining the adoption of RAG-based AI tools for teacher empowerment under the Ugandan Competence-Based Curriculum framework.
 
-A research paper on the NDU Lesson Plan Generator has been submitted to the **EAC Regional Science, Technology and Innovation Conference**.
 
 ---
 
