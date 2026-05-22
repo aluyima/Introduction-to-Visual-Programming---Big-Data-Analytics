@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CBC Lesson Plan Generator — Teacher Survey Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Space+Mono:wght@400;700&family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #07090f;
+  --surface:  #0d1220;
+  --card:     #111827;
+  --border:   #1e2d45;
+  --accent:   #f0a500;
+  --blue:     #4f9cf9;
+  --green:    #34d399;
+  --purple:   #a78bfa;
+  --text:     #e8edf5;
+  --muted:    #6b7f9a;
+  --font-d:   'Playfair Display', Georgia, serif;
+  --font-m:   'Space Mono', 'Courier New', monospace;
+  --font-b:   'Nunito', system-ui, sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-b);
+  min-height: 100vh;
+  background-image:
+    radial-gradient(ellipse 80% 40% at 20% -10%, rgba(240,165,0,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 110%, rgba(79,156,249,0.05) 0%, transparent 60%);
+}
+
+.container {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 3rem;
+}
+
+/* ── HEADER ── */
+header {
+  margin-bottom: 2.25rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+.header-top {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+.study-tag {
+  font-family: var(--font-m);
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  border: 1px solid rgba(240,165,0,0.4);
+  padding: 0.22rem 0.65rem;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+h1 {
+  font-family: var(--font-d);
+  font-size: clamp(1.2rem, 2.5vw, 1.75rem);
+  font-weight: 700;
+  line-height: 1.25;
+}
+h1 em { font-style: normal; color: var(--accent); }
+.header-meta {
+  display: flex;
+  gap: 2.5rem;
+  flex-wrap: wrap;
+}
+.meta-item {
+  font-family: var(--font-m);
+  font-size: 0.65rem;
+  color: var(--muted);
+  line-height: 1.8;
+}
+.meta-item strong { color: var(--text); font-weight: 700; }
+
+/* ── GRID ── */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.1rem;
+}
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1.25rem 1.35rem 1rem;
+  position: relative;
+  overflow: hidden;
+  animation: fadeUp 0.55s ease both;
+}
+.card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent) 0%, transparent 60%);
+}
+.card.wide { grid-column: 1 / -1; }
+.card:nth-child(1) { animation-delay: 0.08s; }
+.card:nth-child(2) { animation-delay: 0.16s; }
+.card:nth-child(3) { animation-delay: 0.24s; }
+.card:nth-child(4) { animation-delay: 0.32s; }
+.card:nth-child(5) { animation-delay: 0.40s; }
+.card:nth-child(6) { animation-delay: 0.48s; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.card-title {
+  font-family: var(--font-d);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 0.2rem;
+}
+.card-sub {
+  font-family: var(--font-m);
+  font-size: 0.6rem;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+}
+.chart-wrap { width: 100%; }
+
+/* ── LEGEND ── */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.1rem;
+  margin-top: 0.65rem;
+}
+.leg-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-m);
+  font-size: 0.62rem;
+  color: var(--muted);
+}
+.leg-rect { width: 14px; height: 9px; border-radius: 2px; flex-shrink: 0; }
+.leg-dot  { width: 9px;  height: 9px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── TOOLTIP ── */
+#tip {
+  position: fixed;
+  background: #0d1726;
+  border: 1px solid rgba(240,165,0,0.5);
+  border-radius: 4px;
+  padding: 0.45rem 0.75rem;
+  font-family: var(--font-m);
+  font-size: 0.68rem;
+  color: var(--text);
+  line-height: 1.6;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.12s;
+  z-index: 9999;
+  max-width: 220px;
+}
+#tip.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="header-top">
+      <span class="study-tag">PhD-IS · Big Data Analytics · PIS 9204</span>
+      <h1>CBC Lesson Plan Generator &mdash; <em>Teacher Survey Analysis Dashboard</em></h1>
+    </div>
+    <div class="header-meta">
+      <span class="meta-item">Survey 1 — Post-Introduction<br><strong>N = 103</strong> secondary school teachers</span>
+      <span class="meta-item">Survey 2 — Post-Implementation<br><strong>N = 69</strong> teachers who taught with the system</span>
+      <span class="meta-item">Framework<br><strong>TAM · PCK · Self-Efficacy · System Quality</strong></span>
+      <span class="meta-item">Setting<br><strong>Ugandan Secondary Schools · CBC Curriculum</strong></span>
+      <span class="meta-item">Scale<br><strong>5-Point Likert (1 = Strongly Disagree → 5 = Strongly Agree)</strong></span>
+    </div>
+  </header>
+
+  <div class="grid">
+
+    <!-- CARD 1: Radar -->
+    <div class="card">
+      <div class="card-title">TAM Construct Means</div>
+      <div class="card-sub">Survey 1 · N=103 · Technology Acceptance Model · 5 Constructs</div>
+      <div class="chart-wrap" id="radar"></div>
+    </div>
+
+    <!-- CARD 2: Donut -->
+    <div class="card">
+      <div class="card-title">Subject Distribution</div>
+      <div class="card-sub">Survey 1 · N=102 · Subjects Prepared Using the Tool</div>
+      <div class="chart-wrap" id="donut"></div>
+    </div>
+
+    <!-- CARD 3: Stacked Bar (wide) -->
+    <div class="card wide">
+      <div class="card-title">Perceived Usefulness — Likert Response Distribution</div>
+      <div class="card-sub">Survey 1 · N=103 · Four PU Items · Response Counts per Score Level (1–5)</div>
+      <div class="chart-wrap" id="stacked"></div>
+      <div class="legend" id="stacked-legend"></div>
+    </div>
+
+    <!-- CARD 4: Bubble -->
+    <div class="card">
+      <div class="card-title">PCK Gains — Item-Level Means</div>
+      <div class="card-sub">Survey 2 · N=69 · Post-Implementation · Bubble Area Proportional to Mean Score</div>
+      <div class="chart-wrap" id="bubble"></div>
+    </div>
+
+    <!-- CARD 5: Bar -->
+    <div class="card">
+      <div class="card-title">Survey 2 Construct Comparison</div>
+      <div class="card-sub">Survey 2 · N=69 · Four Constructs · Composite Mean Scores (Domain 3.5–4.3)</div>
+      <div class="chart-wrap" id="grouped"></div>
+    </div>
+
+    <!-- CARD 6: Histogram (wide) -->
+    <div class="card wide">
+      <div class="card-title">Planned Lesson Delivery Dates</div>
+      <div class="card-sub">Survey 1 · N=100 Valid Dates · Distribution of Teacher-Reported Teaching Dates · 3 Outlier Dates Excluded</div>
+      <div class="chart-wrap" id="hist"></div>
+    </div>
+
+  </div>
+</div>
+
+<div id="tip"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   DATA  —  All values derived from survey1_cleaned.csv (N=103)
+            and survey2_cleaned.csv (N=69)
+   ═══════════════════════════════════════════════════════════════ */
+
+const RADAR_DATA = [
+  { axis:"Perceived\nUsefulness",  short:"PU",   value:4.439 },
+  { axis:"Ease of\nUse",           short:"PEOU", value:4.333 },
+  { axis:"Behavioral\nIntention",  short:"BI",   value:4.451 },
+  { axis:"System\nQuality",        short:"SQ",   value:4.068 },
+  { axis:"Job\nRelevance",         short:"JR",   value:4.519 }
+];
+
+const STACKED_DATA = [
+  { item:"Improves Performance",    "1":4,"2":3,"3":3,"4":18,"5":75 },
+  { item:"Enhances Effectiveness",  "1":4,"2":4,"3":3,"4":21,"5":71 },
+  { item:"Increases Productivity",  "1":2,"2":7,"3":6,"4":23,"5":65 },
+  { item:"Useful in Job",           "1":2,"2":5,"3":8,"4":24,"5":64 }
+];
+
+const DONUT_DATA = [
+  { label:"History & Political Ed.", value:22 },
+  { label:"English",                 value:21 },
+  { label:"Biology",                 value:16 },
+  { label:"ICT",                     value:10 },
+  { label:"Mathematics",             value:10 },
+  { label:"Physics",                 value:8  },
+  { label:"Chemistry",               value:6  },
+  { label:"Entrepreneurship",        value:4  },
+  { label:"Geography",               value:3  },
+  { label:"Kiswahili",               value:2  }
+];
+
+const BUBBLE_DATA = [
+  { label:"Adapt to student\nunderstanding",   value:4.275 },
+  { label:"Subject knowledge\nincreased",       value:4.043 },
+  { label:"More assessment\nways",              value:4.101 },
+  { label:"More subject\nstrategies",           value:4.493 },
+  { label:"Familiar with\nmisconceptions",      value:4.087 },
+  { label:"Wider teaching\napproaches",         value:3.681 },
+  { label:"Adapt to different\nlearners",       value:2.913 },
+  { label:"Better student\nassessment",         value:4.174 },
+  { label:"Better classroom\nmanagement",       value:4.536 },
+  { label:"More prepared for\nsubject matter",  value:4.130 }
+];
+
+const GROUPED_DATA = [
+  { label:["PCK","Gains"],              mean:4.043, items:10, col:"var(--accent)"  },
+  { label:["System","Quality"],         mean:4.062, items:4,  col:"var(--blue)"    },
+  { label:["Teaching","Self-Efficacy"], mean:4.101, items:2,  col:"var(--green)"   },
+  { label:["Life Sat.","(Control)"],    mean:3.964, items:4,  col:"var(--purple)"  }
+];
+
+const HIST_DATA = [
+  { date:"2024-04-09",count:1  },{ date:"2025-03-05",count:2  },
+  { date:"2025-03-06",count:8  },{ date:"2025-03-07",count:12 },
+  { date:"2025-03-08",count:1  },{ date:"2025-03-10",count:18 },
+  { date:"2025-03-11",count:7  },{ date:"2025-03-12",count:6  },
+  { date:"2025-03-13",count:4  },{ date:"2025-03-14",count:4  },
+  { date:"2025-03-17",count:5  },{ date:"2025-03-19",count:1  },
+  { date:"2025-03-20",count:1  },{ date:"2025-03-27",count:2  },
+  { date:"2025-04-09",count:5  },{ date:"2025-04-10",count:3  },
+  { date:"2025-04-11",count:2  },{ date:"2025-04-14",count:6  },
+  { date:"2025-04-15",count:1  },{ date:"2025-05-18",count:1  },
+  { date:"2025-06-03",count:2  },{ date:"2025-08-11",count:2  },
+  { date:"2025-08-13",count:2  },{ date:"2025-09-25",count:1  },
+  { date:"2025-11-04",count:1  },{ date:"2025-12-03",count:1  },
+  { date:"2026-04-16",count:1  }
+].map(d => ({ ...d, date: new Date(d.date) }));
+
+/* ═══════════════════════════════════════════════════════════════
+   THEME CONSTANTS
+   ═══════════════════════════════════════════════════════════════ */
+
+const C = {
+  accent:  '#f0a500',
+  blue:    '#4f9cf9',
+  green:   '#34d399',
+  purple:  '#a78bfa',
+  text:    '#e8edf5',
+  muted:   '#6b7f9a',
+  border:  '#1e2d45',
+  bg:      '#07090f',
+  card:    '#111827'
+};
+
+const DONUT_PAL = [
+  '#f0a500','#4f9cf9','#34d399','#f472b6','#a78bfa',
+  '#fb923c','#22d3ee','#86efac','#fbbf24','#c084fc'
+];
+
+const LIKERT_COLORS = ['#dc2626','#f97316','#64748b','#4ade80','#16a34a'];
+
+const MONO  = "'Space Mono', monospace";
+const BODY  = "'Nunito', sans-serif";
+const SERIF = "'Playfair Display', serif";
+
+/* ═══════════════════════════════════════════════════════════════
+   TOOLTIP HELPERS
+   ═══════════════════════════════════════════════════════════════ */
+
+const tipEl = document.getElementById('tip');
+function showTip(html, ev) {
+  tipEl.innerHTML = html;
+  tipEl.classList.add('show');
+  positionTip(ev);
+}
+function positionTip(ev) {
+  tipEl.style.left = (ev.clientX + 14) + 'px';
+  tipEl.style.top  = (ev.clientY - 10) + 'px';
+}
+function hideTip() { tipEl.classList.remove('show'); }
+
+/* ═══════════════════════════════════════════════════════════════
+   CHART 1 — RADAR (D3 Paths + Scales)
+   TAM constructs from Survey 1 (N=103)
+   ═══════════════════════════════════════════════════════════════ */
+
+function drawRadar() {
+  const wrap = document.getElementById('radar');
+  const W = wrap.clientWidth || 460;
+  const H = 310;
+  const cx = W / 2, cy = H / 2 + 12;
+  const R  = Math.min(W * 0.36, H * 0.36);
+  const n  = RADAR_DATA.length;
+  const aStep = (2 * Math.PI) / n;
+  const rScale = d3.scaleLinear().domain([0, 5]).range([0, R]);
+
+  const svg = d3.select('#radar').append('svg')
+    .attr('viewBox', `0 0 ${W} ${H}`)
+    .attr('width', '100%');
+
+  const g = svg.append('g');
+
+  // Grid rings (levels 1–5)
+  for (let lv = 1; lv <= 5; lv++) {
+    const r = rScale(lv);
+    const pts = RADAR_DATA.map((_, i) => {
+      const a = i * aStep - Math.PI / 2;
+      return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+    });
+    g.append('polygon')
+      .attr('points', pts.map(p => p.join(',')).join(' '))
+      .attr('fill', 'none')
+      .attr('stroke', lv === 5 ? C.border : '#151f30')
+      .attr('stroke-width', lv === 5 ? 1.5 : 1);
+    if (lv % 2 === 0) {
+      g.append('text')
+        .attr('x', cx + 4).attr('y', cy - r + 4)
+        .attr('fill', C.muted).attr('font-size', '8px')
+        .attr('font-family', MONO).text(lv);
+    }
+  }
+
+  // Spoke lines
+  RADAR_DATA.forEach((_, i) => {
+    const a = i * aStep - Math.PI / 2;
+    g.append('line')
+      .attr('x1', cx).attr('y1', cy)
+      .attr('x2', cx + R * Math.cos(a))
+      .attr('y2', cy + R * Math.sin(a))
+      .attr('stroke', C.border).attr('stroke-width', 1.2);
+  });
+
+  // Filled polygon
+  const polyPts = RADAR_DATA.map((d, i) => {
+    const a = i * aStep - Math.PI / 2;
+    const r = rScale(d.value);
+    return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+  });
+  g.append('polygon')
+    .attr('points', polyPts.map(p => p.join(',')).join(' '))
+    .attr('fill', C.accent).attr('fill-opacity', 0.15)
+    .attr('stroke', C.accent).attr('stroke-width', 2.2);
+
+  // Axis labels
+  RADAR_DATA.forEach((d, i) => {
+    const a  = i * aStep - Math.PI / 2;
+    const lR = R + 30;
+    const lx = cx + lR * Math.cos(a);
+    const ly = cy + lR * Math.sin(a);
+    const lines = d.axis.split('\n');
+    const lineH = 12;
+    const startDy = -(lines.length - 1) * lineH / 2;
+
+    const t = g.append('text')
+      .attr('x', lx).attr('y', ly)
+      .attr('text-anchor', 'middle')
+      .attr('font-family', BODY)
+      .attr('font-size', '10px')
+      .attr('font-weight', '600')
+      .attr('fill', C.text);
+
+    lines.forEach((line, li) => {
+      t.append('tspan')
+        .attr('x', lx)
+        .attr('dy', li === 0 ? startDy : lineH)
+        .text(line);
+    });
+  });
+
+  // Data point dots + value labels
+  RADAR_DATA.forEach((d, i) => {
+    const a  = i * aStep - Math.PI / 2;
+    const r  = rScale(d.value);
+    const px = cx + r * Math.cos(a);
+    const py = cy + r * Math.sin(a);
+    const lx = cx + (r + 14) * Math.cos(a);
+    const ly = cy + (r + 14) * Math.sin(a);
+
+    g.append('circle')
+      .attr('cx', px).attr('cy', py).attr('r', 5.5)
+      .attr('fill', C.accent).attr('stroke', C.bg).attr('stroke-width', 2)
+      .style('cursor', 'pointer')
+      .on('mouseover', ev => showTip(`<strong>${d.short} — ${d.axis.replace('\n',' ')}</strong><br>Mean: ${d.value.toFixed(3)} / 5.000`, ev))
+      .on('mousemove', positionTip)
+      .on('mouseout', hideTip);
+
+    g.append('text')
+      .attr('x', lx).attr('y', ly + 4)
+      .attr('text-anchor', 'middle')
+      .attr('fill', C.accent)
+      .attr('font-size', '9.5px')
+      .attr('font-family', MONO)
+      .attr('font-weight', '700')
+      .text(d.value.toFixed(2));
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CHART 2 — DONUT (D3 Pie Layout + Arcs)
+   Subject distribution from Survey 1 (N=102)
+   ═══════════════════════════════════════════════════════════════ */
+
+function drawDonut() {
+  const wrap = document.getElementById('donut');
+  const W  = wrap.clientWidth || 460;
+  const H  = 310;
+  const OR = 105, IR = 60;
+  const cx = W * 0.37, cy = H / 2;
+
+  const svg = d3.select('#donut').append('svg')
+    .attr('viewBox', `0 0 ${W} ${H}`)
+    .attr('width', '100%');
+
+  const pie    = d3.pie().value(d => d.value).sort(null);
+  const arc    = d3.arc().innerRadius(IR).outerRadius(OR);
+  const arcHov = d3.arc().innerRadius(IR).outerRadius(OR + 9);
+
+  const g = svg.append('g').attr('transform', `translate(${cx},${cy})`);
+
+  const slices = g.selectAll('.arc').data(pie(DONUT_DATA)).enter().append('g');
+
+  slices.append('path')
+    .attr('d', arc)
+    .attr('fill', (_, i) => DONUT_PAL[i])
+    .attr('stroke', C.bg).attr('stroke-width', 2.5)
+    .style('cursor', 'pointer')
+    .on('mouseover', function(ev, d) {
+      d3.select(this).transition().duration(140).attr('d', arcHov);
+      const pct = ((d.data.value / 102) * 100).toFixed(1);
+      showTip(`<strong>${d.data.label}</strong><br>${d.data.value} teachers (${pct}%)`, ev);
+    })
+    .on('mousemove', positionTip)
+    .on('mouseout', function() {
+      d3.select(this).transition().duration(140).attr('d', arc);
+      hideTip();
+    })
+    .transition().duration(900)
+    .attrTween('d', function(d) {
+      const i = d3.interpolate({ startAngle: 0, endAngle: 0 }, d);
+      return t => arc(i(t));
+    });
+
+  // Centre label
+  g.append('text').attr('text-anchor','middle').attr('y', '-0.4em')
+    .attr('fill', C.text).attr('font-size', '24px').attr('font-weight', '700')
+    .attr('font-family', SERIF).text('102');
+  g.append('text').attr('text-anchor','middle').attr('y', '1.2em')
+    .attr('fill', C.muted).attr('font-size', '8px').attr('font-family', MONO)
+    .text('TEACHERS');
+
+  // Legend
+  const lx = cx + OR + 20;
+  const totalH = DONUT_DATA.length * 16;
+  DONUT_DATA.forEach((d, i) => {
+    const ly = cy - totalH / 2 + i * 16;
+    svg.append('rect')
+      .attr('x', lx).attr('y', ly - 5)
+      .attr('width', 10).attr('height', 10).attr('rx', 2)
+      .attr('fill', DONUT_PAL[i]);
+    svg.append('text')
+      .attr('x', lx + 15).attr('y', ly + 3)
+      .attr('fill', i < 5 ? C.text : C.muted)
+      .attr('font-size', '10px').attr('font-family', BODY)
+      .text(`${d.label}  (${d.value})`);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CHART 3 — STACKED BAR (D3 Stack + Enter/Update/Exit)
+   Likert response distribution for 4 PU items, Survey 1 (N=103)
+   ═══════════════════════════════════════════════════════════════ */
+
+function drawStacked() {
+  const wrap = document.getElementById('stacked');
+  const W = wrap.clientWidth || 960;
+  const H = 215;
+  const m = { top: 16, right: 40, bottom: 45, left: 188 };
+  const iW = W - m.left - m.right;
+  const iH = H - m.top - m.bottom;
+
+  const svg = d3.select('#stacked').append('svg')
+    .attr('viewBox', `0 0 ${W} ${H}`).attr('width', '100%');
+
+  const g = svg.append('g').attr('transform', `translate(${m.left},${m.top})`);
+
+  const keys   = ['1','2','3','4','5'];
+  const series = d3.stack().keys(keys)(STACKED_DATA);
+
+  const x = d3.scaleLinear().domain([0, 103]).range([0, iW]);
+  const y = d3.scaleBand().domain(STACKED_DATA.map(d => d.item)).range([0, iH]).padding(0.3);
+
+  const LABELS = ['Strongly Disagree','Disagree','Neutral','Agree','Strongly Agree'];
+
+  // Grid verticals
+  [20, 40, 60, 80].forEach(v => {
+    g.append('line')
+      .attr('x1', x(v)).attr('x2', x(v)).attr('y1', 0).attr('y2', iH)
+      .attr('stroke', C.border).attr('stroke-dasharray','3,3');
+  });
+
+  // Stacked layers — Enter/Update/Exit pattern
+  const layers = g.selectAll('.layer').data(series).enter().append('g').attr('class','layer');
+
+  layers.selectAll('rect').data(d => d).enter().append('rect')
+    .attr('y', d => y(d.data.item))
+    .attr('x', d => x(d[0]))
+    .attr('height', y.bandwidth())
+    .attr('width', 0)
+    .attr('fill', (_, i, nodes) => LIKERT_COLORS[+d3.select(nodes[i].parentNode).datum().key - 1])
+    .style('cursor', 'pointer')
+    .on('mouseover', function(ev, d) {
+      const k = d3.select(this.parentNode).datum().key;
+      const n = d.data[k];
+      showTip(`<strong>${d.data.item}</strong><br>${LABELS[+k-1]}: ${n} teachers (${(n/103*100).toFixed(1)}%)`, ev);
+    })
+    .on('mousemove', positionTip)
+    .on('mouseout', hideTip)
+    .transition().duration(900).delay((_, i) => i * 35)
+    .attr('width', d => Math.max(0, x(d[1]) - x(d[0])));
+
+  // Count labels inside bars
+  series.forEach(layer => {
+    g.selectAll(null).data(layer).enter().append('text')
+      .attr('y', d => y(d.data.item) + y.bandwidth() / 2 + 4)
+      .attr('x', d => x(d[0]) + (x(d[1]) - x(d[0])) / 2)
+      .attr('text-anchor','middle')
+      .attr('fill', '#0a0e1a').attr('font-weight', '700')
+      .attr('font-size', '9.5px').attr('font-family', MONO)
+      .attr('pointer-events', 'none')
+      .attr('opacity', d => (x(d[1]) - x(d[0])) > 20 ? 1 : 0)
+      .text(d => d.data[layer.key]);
+  });
+
+  // Y axis
+  const yAx = g.append('g').call(d3.axisLeft(y).tickSize(0));
+  yAx.select('.domain').remove();
+  yAx.selectAll('.tick text').attr('fill', C.text).attr('font-size', '11px').attr('font-family', BODY);
+
+  // X axis
+  const xAx = g.append('g').attr('transform', `translate(0,${iH})`)
+    .call(d3.axisBottom(x).ticks(6).tickFormat(d => `n=${d}`));
+  xAx.select('.domain').attr('stroke', C.border);
+  xAx.selectAll('.tick line').attr('stroke', C.border);
+  xAx.selectAll('.tick text').attr('fill', C.muted).attr('font-size', '9px').attr('font-family', MONO);
+
+  // Legend items
+  const legEl = document.getElementById('stacked-legend');
+  legEl.innerHTML = LABELS.map((l, i) =>
+    `<span class="leg-item"><span class="leg-rect" style="background:${LIKERT_COLORS[i]}"></span>${i+1} — ${l}</span>`
+  ).join('');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CHART 4 — BUBBLE / PACK (D3 Pack Layout)
+   PCK item means from Survey 2 (N=69)
+   ═══════════════════════════════════════════════════════════════ */
+
+function drawBubble() {
+  const wrap = document.getElementById('bubble');
+  const W = wrap.clientWidth || 460;
+  const H = 340;
+
+  const svg = d3.select('#bubble').append('svg')
+    .attr('viewBox', `0 0 ${W} ${H}`).attr('width', '100%');
+
+  const colorScale = d3.scaleLinear()
+    .domain([2.9, 4.55])
+    .range([C.purple, C.accent])
+    .interpolate(d3.interpolateHsl);
+
+  // d3.pack requires a hierarchy
+  const hier = d3.hierarchy({ children: BUBBLE_DATA }).sum(d => d.value || 0);
+  d3.pack().size([W - 4, H - 4]).padding(7)(hier);
+
+  const nodes = svg.selectAll('.bnode')
+    .data(hier.leaves())
+    .enter().append('g')
+    .attr('class', 'bnode')
+    .attr('transform', d => `translate(${d.x + 2},${d.y + 2})`);
+
+  // Circles
+  nodes.append('circle')
+    .attr('r', 0)
+    .attr('fill', d => colorScale(d.data.value))
+    .attr('fill-opacity', 0.88)
+    .attr('stroke', d => colorScale(d.data.value))
+    .attr('stroke-width', 1.5)
+    .style('cursor', 'pointer')
+    .on('mouseover', (ev, d) => showTip(
+      `<strong>${d.data.label.replace(/\n/,' ')}</strong><br>Mean: ${d.data.value.toFixed(3)} / 5.000`,
+      ev
+    ))
+    .on('mousemove', positionTip)
+    .on('mouseout', hideTip)
+    .transition().duration(800).delay((_, i) => i * 55)
+    .attr('r', d => d.r);
+
+  // Labels inside bubbles
+  nodes.each(function(d) {
+    if (d.r < 24) return;
+    const lines  = d.data.label.split('\n');
+    const fsize  = d.r > 42 ? 9 : d.r > 32 ? 8 : 7.5;
+    const lineH  = fsize * 1.35;
+    const startDy = -(lines.length - 1) * lineH / 2;
+
+    // Label text
+    const t = d3.select(this).append('text')
+      .attr('text-anchor', 'middle')
+      .attr('fill', '#060a12')
+      .attr('font-size', fsize + 'px')
+      .attr('font-weight', '700')
+      .attr('font-family', BODY)
+      .attr('pointer-events', 'none');
+
+    lines.forEach((line, li) => {
+      t.append('tspan').attr('x', 0).attr('dy', li === 0 ? startDy : lineH).text(line);
+    });
+
+    // Mean value below label
+    const valY = (lines.length - 1) * lineH / 2 + lineH + 1;
+    d3.select(this).append('text')
+      .attr('y', valY)
+      .attr('text-anchor', 'middle')
+      .attr('fill', '#060a12')
+      .attr('font-size', (fsize + 0.5) + 'px')
+      .attr('font-family', MONO)
+      .attr('font-weight', '700')
+      .attr('pointer-events', 'none')
+      .text(d.data.value.toFixed(2));
+  });
+
+  // Color scale legend bar
+  const defs = svg.append('defs');
+  const grad = defs.append('linearGradient').attr('id','bub-grad').attr('x1','0%').attr('x2','100%');
+  grad.append('stop').attr('offset','0%').attr('stop-color', C.purple);
+  grad.append('stop').attr('offset','100%').attr('stop-color', C.accent);
+  svg.append('rect').attr('x', 10).attr('y', H - 20).attr('width', 100).attr('height', 7).attr('rx', 3).attr('fill','url(#bub-grad)');
+  svg.append('text').attr('x', 10).attr('y', H - 24).attr('fill', C.muted).attr('font-size','8px').attr('font-family', MONO).text('2.9');
+  svg.append('text').attr('x', 112).attr('y', H - 24).attr('fill', C.muted).attr('font-size','8px').attr('font-family', MONO).text('4.6 mean');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CHART 5 — GROUPED BAR (D3 Scales + Axes + Transitions)
+   Survey 2 construct comparison (N=69)
+   ═══════════════════════════════════════════════════════════════ */
+
+function drawGrouped() {
+  const wrap = document.getElementById('grouped');
+  const W = wrap.clientWidth || 460;
+  const H = 290;
+  const m = { top: 28, right: 24, bottom: 68, left: 52 };
+  const iW = W - m.left - m.right;
+  const iH = H - m.top - m.bottom;
+
+  const svg = d3.select('#grouped').append('svg')
+    .attr('viewBox', `0 0 ${W} ${H}`).attr('width', '100%');
+
+  const g = svg.append('g').attr('transform', `translate(${m.left},${m.top})`);
+
+  const labels = GROUPED_DATA.map(d => d.label.join('\n'));
+  const x = d3.scaleBand().domain(labels).range([0, iW]).padding(0.32);
+  const y = d3.scaleLinear().domain([3.5, 4.3]).range([iH, 0]);
+
+  // Grid horizontals
+  [3.6,3.7,3.8,3.9,4.0,4.1,4.2,4.3].forEach(v => {
+    g.append('line')
+      .attr('x1', 0).attr('x2', iW).attr('y1', y(v)).attr('y2', y(v))
+      .attr('stroke', v === 4.0 ? C.border : '#131c2e')
+      .attr('stroke-dasharray', '3,3')
+      .attr('stroke-width', v === 4.0 ? 1.4 : 1);
+  });
+
+  // Reference line at 4.0
+  g.append('text')
+    .attr('x', iW + 3).attr('y', y(4.0) + 4)
+    .attr('fill', C.accent).attr('font-size', '8px').attr('font-family', MONO)
+    .text('4.0');
+
+  const barCols = [C.accent, C.blue, C.green, C.purple];
+
+  // Bars
+  GROUPED_DATA.forEach((d, i) => {
+    const key = d.label.join('\n');
+    const bx  = x(key);
+    const bw  = x.bandwidth();
+
+    // Bar glow effect
+    g.append('rect')
+      .attr('x', bx + 2).attr('y', 0).attr('width', bw - 4).attr('height', iH)
+      .attr('fill', barCols[i]).attr('opacity', 0.03);
+
+    g.append('rect')
+      .attr('x', bx).attr('y', iH).attr('width', bw).attr('height', 0)
+      .attr('fill', barCols[i]).attr('rx', 3)
+      .style('cursor', 'pointer')
+      .on('mouseover', ev => showTip(
+        `<strong>${d.label.join(' ')}</strong><br>Mean: ${d.mean.toFixed(3)}<br>Items: ${d.items}`, ev))
+      .on('mousemove', positionTip)
+      .on('mouseout', hideTip)
+      .transition().duration(800).delay(i * 110)
+      .attr('y', y(d.mean)).attr('height', iH - y(d.mean));
+
+    // Value label above bar
+    g.append('text')
+      .attr('x', bx + bw / 2).attr('y', y(d.mean) - 7)
+      .attr('text-anchor', 'middle')
+      .attr('fill', barCols[i]).attr('font-size', '12px').attr('font-family', MONO).attr('font-weight', '700')
+      .text(d.mean.toFixed(2));
+
+    // Items count below bar
+    g.append('text')
+      .attr('x', bx + bw / 2).attr('y', iH + 26)
+      .attr('text-anchor', 'middle')
+      .attr('fill', C.muted).attr('font-size', '8px').attr('font-family', MONO)
+      .text(`(${d.items} items)`);
+  });
+
+  // X axis labels (multiline)
+  const xAx = g.append('g').attr('transform', `translate(0,${iH})`)
+    .call(d3.axisBottom(x).tickSize(0));
+  xAx.select('.domain').remove();
+  xAx.selectAll('.tick text').remove();
+
+  GROUPED_DATA.forEach((d, i) => {
+    const key = d.label.join('\n');
+    const bx  = x(key) + x.bandwidth() / 2;
+    const lines = d.label;
+    lines.forEach((line, li) => {
+      g.append('text')
+        .attr('x', bx).attr('y', iH + 11 + li * 13)
+        .attr('text-anchor', 'middle')
+        .attr('fill', C.text).attr('font-size', '10px').attr('font-family', BODY).attr('font-weight', '600')
+        .text(line);
+    });
+  });
+
+  // Y axis
+  const yAx = g.append('g').call(d3.axisLeft(y).ticks(5).tickFormat(d => d.toFixed(1)));
+  yAx.select('.domain').remove();
+  yAx.selectAll('.tick line').remove();
+  yAx.selectAll('.tick text').attr('fill', C.muted).attr('font-size', '9px').attr('font-family', MONO);
+
+  // Y label
+  svg.append('text').attr('transform','rotate(-90)')
+    .attr('x', -(m.top + iH/2)).attr('y', 14)
+    .attr('text-anchor','middle').attr('fill', C.muted)
+    .attr('font-size','8px').attr('font-family', MONO)
+    .text('MEAN SCORE (1–5 SCALE)');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CHART 6 — HISTOGRAM (D3 Histogram Layout + Time Scale)
+   Expected lesson delivery dates from Survey 1 (N=100 valid)
+   ═══════════════════════════════════════════════════════════════ */
+
+function drawHist() {
+  const wrap = document.getElementById('hist');
+  const W = wrap.clientWidth || 960;
+  const H = 215;
+  const m = { top: 20, right: 30, bottom: 58, left: 50 };
+  const iW = W - m.left - m.right;
+  const iH = H - m.top - m.bottom;
+
+  const svg = d3.select('#hist').append('svg')
+    .attr('viewBox', `0 0 ${W} ${H}`).attr('width', '100%');
+
+  const g = svg.append('g').attr('transform', `translate(${m.left},${m.top})`);
+
+  const xDom = [new Date('2024-12-15'), new Date('2026-06-15')];
+  const x = d3.scaleTime().domain(xDom).range([0, iW]);
+  const y = d3.scaleLinear().domain([0, 20]).range([iH, 0]);
+
+  // Grid horizontals
+  [5, 10, 15, 20].forEach(v => {
+    g.append('line')
+      .attr('x1', 0).attr('x2', iW).attr('y1', y(v)).attr('y2', y(v))
+      .attr('stroke', C.border).attr('stroke-dasharray','3,3');
+    g.append('text')
+      .attr('x', -6).attr('y', y(v) + 4)
+      .attr('text-anchor','end').attr('fill', C.muted)
+      .attr('font-size','8px').attr('font-family', MONO).text(v);
+  });
+
+  // Compute bar width — use ~5-day span in px
+  const msPerDay = 86400000;
+  const pxPerMs  = iW / (xDom[1] - xDom[0]);
+  const bw = Math.max(pxPerMs * msPerDay * 6, 5);
+
+  // Color by date period
+  function barColor(d) {
+    const m = d.date.getMonth() + 1;
+    const yr = d.date.getFullYear();
+    if (yr === 2024)           return C.purple;
+    if (m <= 3)                return C.accent;
+    if (m <= 6)                return C.blue;
+    return C.green;
+  }
+
+  // Bars
+  g.selectAll('.hbar').data(HIST_DATA).enter().append('rect')
+    .attr('class','hbar')
+    .attr('x', d => x(d.date) - bw / 2)
+    .attr('y', iH).attr('height', 0)
+    .attr('width', bw).attr('rx', 2)
+    .attr('fill', barColor)
+    .style('cursor', 'pointer')
+    .on('mouseover', (ev, d) => {
+      const fmt = d3.timeFormat('%d %B %Y');
+      showTip(`<strong>${fmt(d.date)}</strong><br>${d.count} teacher${d.count > 1 ? 's' : ''} planned lessons`, ev);
+    })
+    .on('mousemove', positionTip)
+    .on('mouseout', hideTip)
+    .transition().duration(750).delay((_, i) => i * 22)
+    .attr('y', d => y(d.count))
+    .attr('height', d => iH - y(d.count));
+
+  // Peak annotation
+  const peak = HIST_DATA.find(d => d.count === 18);
+  if (peak) {
+    g.append('line')
+      .attr('x1', x(peak.date)).attr('x2', x(peak.date))
+      .attr('y1', y(peak.count) - 4).attr('y2', y(peak.count) - 20)
+      .attr('stroke', C.accent).attr('stroke-width', 1).attr('stroke-dasharray', '2,2');
+    g.append('text')
+      .attr('x', x(peak.date)).attr('y', y(peak.count) - 24)
+      .attr('text-anchor','middle').attr('fill', C.accent)
+      .attr('font-size','9px').attr('font-family', MONO)
+      .text('Peak n=18 · 10 Mar 2025');
+  }
+
+  // Field collection bracket
+  const fieldStart = new Date('2025-03-01');
+  const fieldEnd   = new Date('2025-04-30');
+  g.append('line')
+    .attr('x1', x(fieldStart)).attr('x2', x(fieldEnd))
+    .attr('y1', -6).attr('y2', -6)
+    .attr('stroke', C.muted).attr('stroke-width', 1);
+  g.append('text')
+    .attr('x', (x(fieldStart) + x(fieldEnd)) / 2).attr('y', -10)
+    .attr('text-anchor','middle').attr('fill', C.muted)
+    .attr('font-size','7.5px').attr('font-family', MONO)
+    .text('Primary field collection window');
+
+  // X axis
+  const xAx = g.append('g').attr('transform', `translate(0,${iH})`)
+    .call(d3.axisBottom(x)
+      .ticks(d3.timeMonth.every(1))
+      .tickFormat(d3.timeFormat('%b %Y')));
+  xAx.select('.domain').attr('stroke', C.border);
+  xAx.selectAll('.tick line').attr('stroke', C.border);
+  xAx.selectAll('.tick text')
+    .attr('fill', C.muted).attr('font-size','9px').attr('font-family', MONO)
+    .attr('transform','rotate(-38)').attr('text-anchor','end').attr('dy','0.4em');
+
+  // Y label
+  svg.append('text').attr('transform','rotate(-90)')
+    .attr('x', -(m.top + iH/2)).attr('y', 14)
+    .attr('text-anchor','middle').attr('fill', C.muted)
+    .attr('font-size','8px').attr('font-family', MONO)
+    .text('NO. OF TEACHERS');
+
+  // Period legend
+  const periods = [
+    { label:'March 2025 — Field collection peak', col: C.accent  },
+    { label:'April – June 2025',                  col: C.blue    },
+    { label:'August 2025 and beyond',             col: C.green   },
+    { label:'2024 (single outlier retained)',     col: C.purple  }
+  ];
+  const legY = H - 4;
+  const segW = iW / periods.length;
+  periods.forEach((p, i) => {
+    const lx = m.left + i * segW;
+    svg.append('rect').attr('x', lx).attr('y', legY - 8).attr('width', 10).attr('height', 8).attr('rx', 2).attr('fill', p.col);
+    svg.append('text').attr('x', lx + 14).attr('y', legY - 1)
+      .attr('fill', C.muted).attr('font-size','7.5px').attr('font-family', MONO).text(p.label);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   INIT
+   ═══════════════════════════════════════════════════════════════ */
+
+window.addEventListener('DOMContentLoaded', () => {
+  drawRadar();
+  drawDonut();
+  drawStacked();
+  drawBubble();
+  drawGrouped();
+  drawHist();
+});
+</script>
+</body>
+</html>
