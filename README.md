@@ -103,4 +103,4 @@ This field study supports a PhD research project at Makerere University examinin
 
 ---
 
-*Ndejje University AI Research Centre · Faculty of Science and Computing*
+*Makerere University - College of Computing & Information Sciences*
